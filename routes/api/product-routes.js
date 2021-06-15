@@ -1,10 +1,19 @@
 const router = require('express').Router();
+const { ReadStream } = require('fs');
 const { Product, Category, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
 
 // get all products
 router.get('/', (req, res) => {
+  try {
+    const productData = await Product.findAll({
+      include: [{model: Category}, {model: Tag}], 
+    });
+    res.status(200).json(productData);
+  } catch (err) {
+    res.status(500).json(err);
+  }
   // find all products
   // be sure to include its associated Category and Tag data
 });
@@ -13,6 +22,20 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  try {
+    const productData = await Product.findByPk(req.params.id, {
+      include: [{model: Category}, {model: Tag}],
+    });
+
+    if (!productData) {
+      res.status(404).json({ message: 'No product found with this id'});
+      return;
+    }
+
+    res.status(200).json(productData);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 // create new product
@@ -91,6 +114,21 @@ router.put('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   // delete one product by its `id` value
+  try {
+    const productData = await Reader.destroy({
+      where: {
+        id: req.body.id,
+      },
+    });
+    if (!productData) {
+      res.status(404).json({message: 'No reader found with that id!'});
+      return;
+    }
+
+    res.status(200).json(productData);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 module.exports = router;
